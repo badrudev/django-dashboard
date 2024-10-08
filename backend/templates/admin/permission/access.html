@@ -1,0 +1,87 @@
+
+{% extends "layout/base.html" %}
+
+
+{% block start %}
+<div class="container d-flex justify-content-center">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css" />
+
+
+<div class="container mt-2">
+   
+    <h4>Permission</h4>
+    <div class="row">
+        <form class="col-12" action="{{ settings.BASE_URL }}/admin/administration/permission/save/{{roleId}}" method="post">
+            
+            <table id="customer_table"  class="display" style="width:100%">
+                {% csrf_token %}
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Module</th>
+                        <th>Permission</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+               
+            </table>
+            <tfoot>
+                <tr>
+                    <th colspan="6">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </th>
+                </tr>
+            </tfoot>
+        </form>
+
+      </div>
+  
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
+<script>
+const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+$(document).ready( function () {
+    loadData()
+})
+var table;
+function loadData(){
+    var pgno = 1;
+    var table = $('table.display');
+    $('table.display').DataTable({
+        "processing" : true,
+        "serverSide" : true,
+        pageLength : 8,
+        ajax: function (data, callback, settings) {
+            var api = this.api();
+            var search = api.search() 
+            var pageInfo = api.page.info();
+            pgno = pageInfo.page+1;
+            $.ajax({
+                url: "{{ settings.BASE_URL }}/admin/administration/permission/"+"{{roleId}}"+"/{{parentId}}",
+                method:"POST",
+                headers: {'X-CSRFToken': csrftoken},
+                data:{start:pgno, length:8,search:search},
+            }).then ( function( json, textStatus, jqXHR ) {
+                callback(json);
+                console.log(json)
+            });
+        },
+        columns: [
+            { data: "id" },
+            { data: "moduleName" },
+            { data: "permission" },
+            { data: "action" },
+            
+        ],  
+    });
+   
+}
+
+
+
+</script>
+</div>
+
+{% endblock %}
