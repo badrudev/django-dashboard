@@ -20,12 +20,17 @@ urlpatterns = [
         path('administration/permission/save/<int:roleId>',views.savePermission,name="save-permission"),
         
         # Movie Url
-        path('movie/posts',views.movieList,name="movie-list"),
+        path('movie/post',views.movieList,name="movie-list"),
         path('movie/post/add',views.movieAdd,name="movie-add"),
         path('movie/post/<int:postId>/edit',views.movieEdit),
         path('movie/post/<int:postId>/delete',views.movieDelete),
-        
 
+        path('movie/menu/',views.menuList),
+        path('movie/menu/<int:parentId>',views.menuList),
+        path('movie/menu/add/',views.menuAdd,name="menu-add"),
+        path('movie/menu/add/<int:parentId>',views.menuAdd),
+        path('movie/menu/edit/<int:menuId>',views.menuEdit),
+        path('movie/menu/<int:menuId>/delete',views.menuDelete),
     
         # path('plugin/chart',views.graphChart),
         path('administration/module/',views.module,name="module"),
@@ -36,7 +41,7 @@ urlpatterns = [
         path('administration/module/<int:moduleId>/delete',views.deleteModule),
         # path('administration/module/<int:moduleId>/edit',views.addeditModule),
         # path('module/add/<int:parentId>',views.addModule,name="add-module"),
-        path('module/list',views.moduleList,name="module-list"),
+        # path('module/list',views.moduleList,name="module-list"),
         # path('module/edit/<int:moduleId>',views.moduleEdit),
         path('sidebar/list',views.sidebarList,name="sidebar-list"),
         path('redirect',views.redirect,name="redirect"),

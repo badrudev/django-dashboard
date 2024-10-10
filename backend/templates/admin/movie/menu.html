@@ -1,0 +1,168 @@
+
+{% extends "layout/base.html" %}
+
+
+{% block start %}
+<div class="container d-flex justify-content-center">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css" />
+
+
+<div class="container mt-2">
+    <button class="btn btn-sm btn-primary my-2" id="add-module">Add Menu</button>
+    <div class="row">
+        <div class="col-12">
+            <table class="display" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+            </table>
+        </div>
+
+      </div>
+  
+</div>
+
+<!-- Add-Edit -->
+<div class="modal fade" id="AddEditModel" tabindex="-1" role="dialog" aria-labelledby="AddEditModel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <form class="modal-content" method="post" id="AddEditForm">
+        {% csrf_token %}
+            <div class="modal-header">
+                <h5 class="modal-title" id="AddEditTitle">Modal</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+               <div class="msg"></div>
+                <input type="hidden" name="menuid" value="{{parentId}}" />                     
+                <div class="form-group" id="name-field">
+                    <label for="module">Menu</label>
+                    <input type="text" class="form-control" required name="menu"  placeholder="Enter label">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">Save </button>
+            </div>
+      </form>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
+<script>
+const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+$(document).ready( function () {
+    loadData()
+})
+
+$('#AddEditForm').submit(function(e){
+    e.preventDefault()
+    console.log($(this).serializeArray())
+    addModel('POST',$(this).serialize())
+})
+
+$('#add-module').click(function(){
+    addModel('GET',{})
+})
+
+function addModel(method,post={}){
+    $.ajax({
+        type: method,
+        url: "{{ settings.BASE_URL }}add/{{parentId}}",
+        headers: {'X-CSRFToken': csrftoken},
+        data:post,
+        success: function (response) {
+            if(response.success && method=='GET'){
+                $('#AddEditModel').modal('show'); 
+                $('#name-field').html(`<label for="module">Menu</label>
+                    <input type="text" class="form-control" required name="menu"  placeholder="Enter label">`)
+            }else if(response.success && method=='POST'){
+                $('#AddEditModel').modal('hide'); 
+                $('#AddEditForm').trigger("reset");
+                loadData()
+            }
+        },
+        error: function (response) {
+            alert(response["responseJSON"]["error"]);
+        }
+    })
+}
+function editModel(method,menuId,post={}){
+    $.ajax({
+        type: method,
+        url: "{{ settings.BASE_URL }}edit/"+menuId,
+        headers: {'X-CSRFToken': csrftoken},
+        data:post,
+        success: function (response) {
+            if(response.success && method=='GET'){
+                $('#AddEditModel').modal('show'); 
+                $('#name-field').html(`<label for="module">Menu</label>
+                    <input type="text" class="form-control" required name="menu" value="${response.name}"  
+                    placeholder="Enter label">
+                    <input type="hidden" required name="id" value="${response.menuId}" >
+                    `)
+                
+            }else if(response.success && method=='POST'){
+                $('#AddEditModel').modal('hide'); 
+                $('#AddEditForm').trigger("reset");
+                loadData()
+            }
+        },
+        error: function (response) {
+            alert(response["responseJSON"]["error"]);
+        }
+    })
+}
+
+
+
+function loadData(){
+    let table = $('table.display')
+    if($.fn.dataTable.isDataTable(table)) {
+        table.DataTable().destroy();
+    }
+    var pgno = 0;
+    $('table.display').DataTable({
+            "processing" : true,
+			"serverSide" : true,
+            pageLength : 8,
+            ajax: function (data, callback, settings) {
+                var api = this.api();
+                var search = api.search() 
+                var pageInfo = api.page.info();
+                pgno = pageInfo.page+1;
+                
+                $.ajax({
+                    url: "{{ settings.BASE_URL }}/admin/movie/menu/{{parentId}}",
+                    method:"POST",
+                    headers: {'X-CSRFToken': csrftoken},
+                    data:{start:pgno, length:8,search:search,type:'View'}
+                }).then ( function( json, textStatus, jqXHR ) {
+                     callback(json);
+                     console.log(json)
+                });
+            },
+
+            // pageLength: 10,
+            columns: [
+                { data: "id" },
+                { data: "name" },
+                { data: "action" },
+                
+            ],
+        
+    });
+}
+
+
+</script>
+</div>
+
+{% endblock %}

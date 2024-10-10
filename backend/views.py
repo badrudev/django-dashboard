@@ -173,6 +173,7 @@ def deleteModule(request,*args,**kwargs):
     groupIds = kwargs.get('groupIds')
     if 'Delete' in kwargs.get('permission'):
         GroupPermission.objects.filter(module_id=moduleId,group_id=groupIds[0]).delete()
+        ModuleAction.objects.filter(module_id=moduleId).delete()
         Module.objects.filter(id=moduleId).delete()
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
       
@@ -199,6 +200,11 @@ def addEditModule(request,*args,**kwargs):
                   status='1',
                   parent_id=post['parent_id']
             )
+            action = ModuleAction.objects.create(
+                  permission=permission,                  
+                  module_id=module.id,                  
+                  module_parent_id=parentId,
+            )
             
             GroupPermission.objects.create(
                permission=permission,                  
@@ -217,7 +223,6 @@ def addEditModule(request,*args,**kwargs):
             "success": False,
             "access":"You don't have add permission!"
          }, status=200)   
-
 
 @permission_required()
 def rolePermission(request,*args,**kwargs):
@@ -337,6 +342,7 @@ def savePermission(request,*args,**kwargs):
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+""" 
 @xhr_request_only()
 def moduleList(request):
    parentList =  list(Module.objects.all().values())
@@ -345,7 +351,8 @@ def moduleList(request):
       "success": True,
       "data":parentList,
       "permission":permission
-   }, status=200)   
+   }, status=200) 
+"""   
 
 
 @permission_required()
@@ -361,24 +368,24 @@ def movieList(request,*args,**kwargs):
          groupIds = kwargs.get('groupIds')
          listData = []
          totalLen = 0
-         if kwargs.get('access'):
-            if search :
-               data =  Posts.objects.filter(name__contains=search)[startIndex:endIndex].all()
-               totalLen = Posts.objects.filter(name__contains=search).count()
-            else:
-               data =  Posts.objects.filter(name__contains=search)[startIndex:endIndex].all()
-               totalLen = Posts.objects.filter(name__contains=search).count()
-
          
-            for i in data:
-               objects = {
-                  "id":i.id,
-                  "name":i.name,
-                  "rate":i.rate,
-                  "action":f"<a class='btn btn-sm btn-info mx-1' href='{settings.BASE_URL}admin/movie/post/{i.id}/edit'>Edit</a>"
-                           f"<a class='btn btn-sm btn-primary mx-1' href='{settings.BASE_URL}admin/movie/post/{i.id}/delete'>Delete</a>"
-               }
-               listData.append(objects)
+         if search :
+            data =  Posts.objects.filter(name__contains=search)[startIndex:endIndex].all()
+            totalLen = Posts.objects.filter(name__contains=search).count()
+         else:
+            data =  Posts.objects.filter(name__contains=search)[startIndex:endIndex].all()
+            totalLen = Posts.objects.filter(name__contains=search).count()
+
+      
+         for i in data:
+            objects = {
+               "id":i.id,
+               "name":i.name,
+               "rate":i.rate,
+               "action":f"<a class='btn btn-sm btn-info mx-1' href='{settings.BASE_URL}admin/movie/post/{i.id}/edit'>Edit</a>"
+                        f"<a class='btn btn-sm btn-primary mx-1' href='{settings.BASE_URL}admin/movie/post/{i.id}/delete'>Delete</a>"
+            }
+            listData.append(objects)
 
          return JsonResponse({
             "success": True,
@@ -417,7 +424,6 @@ def movieEdit(request,*args,**kwargs):
    else:
       return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
   
-
 @permission_required()
 def movieAdd(request,*args,**kwargs):
    if 'Add' in kwargs.get('permission'):
@@ -446,12 +452,115 @@ def movieDelete(request,*args,**kwargs):
    
    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
+# Menu list
+@permission_required()
+def menuList(request,*args,**kwargs):
+    parentId = kwargs.get('parentId', '')
+    if request.method == 'POST':
+      if 'View' in kwargs.get('permission'):
+         start = int(request.POST['start'])
+         length = int(request.POST['length'])
+         search = request.POST['search']
+         startIndex = (int(start)-1) * int(length)
+         endIndex = startIndex + int(length)
+         moduleIds = kwargs.get('moduleIds')
+         groupIds = kwargs.get('groupIds')
+         listData = []
+         totalLen = 0 
+         if search :
+            data =  Menu.objects.filter(Q(menuId=parentId),name__contains=search)[startIndex:endIndex].all()
+            totalLen = Menu.objects.filter(Q(menuId=parentId),name__contains=search).count()
+         else:
+            data =  Menu.objects.filter(Q(menuId=parentId),name__contains=search)[startIndex:endIndex].all()
+            totalLen = Menu.objects.filter(Q(menuId=parentId),name__contains=search).count()
+
+         for i in data:
+            objects = {
+               "id":i.id,
+               "name":f"<a href='{settings.BASE_URL}admin/movie/menu/{i.id}'>{i.name}</a>",
+               "action":f"<button class='btn btn-sm btn-info mx-1' onclick=editModel('GET',{i.id})>Edit</button>"
+                        f"<a class='btn btn-sm btn-primary mx-1' href='{settings.BASE_URL}admin/movie/menu/{i.id}/delete'>Delete</a>"
+            }
+            listData.append(objects)
+
+         return JsonResponse({
+            "success": True,
+            "iTotalRecords":totalLen,
+            "iTotalDisplayRecords":totalLen ,
+            "aaData":listData
+         }, status=200)
+      
+    else:
+      context = {
+         'parentId':parentId
+      }
+      return render(request,"admin/movie/menu.html",context)
+
+@permission_required()
+def menuAdd(request,*args,**kwargs):
+    parentId = kwargs.get('parentId', '')
+    groupIds = kwargs.get('groupIds')
+    
+    if 'Add' in kwargs.get('permission'):
+      if request.method == 'POST':
+         post = request.POST
+         if 'id' in post and 'Edit' in kwargs.get('permission'):
+            menu = Menu.objects.get(id=post['id'])
+            menu.name = post['menu']
+            menu.save()
+         else:
+            menu = Menu.objects.create(
+               name=post['menu'],
+               menuId=post['menuid'],
+               status='1',
+            )
+            
+      return JsonResponse({
+         "success": True,
+         "parentId":parentId,
+         "status":"Successfully added!",
+      }, status=200)   
+    
+    else:
+         return JsonResponse({
+            "success": False,
+            "access":"You don't have add permission!"
+         }, status=200) 
+
+
+@permission_required()
+def menuEdit(request,*args,**kwargs):
+    menuId = kwargs.get('menuId', '')
+    if 'Edit' in kwargs.get('permission'):
+         menu = Menu.objects.get(id=menuId)
+         return JsonResponse({
+            "success": True,
+            "name":menu.name,
+            "menuId":menu.id
+         }, status=200)   
+    else:
+         return JsonResponse({
+            "success": False,
+            "access":"You don't have add permission!"
+         }, status=200) 
+
+
+
+
+@permission_required()
+def menuDelete(request,*args,**kwargs):
+   if 'Delete' in kwargs.get('permission'):
+      menuId = kwargs.get('menuId')
+      Menu.objects.filter(id=menuId).delete()
+   
+   return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+       
+
 
 @xhr_request_only()
 def sidebarList(request,*args,**kwargs):
    moduleIds = kwargs.get('moduleIds')
    sidebarList =  list(Module.objects.filter(id__in=moduleIds).values())
-
    return JsonResponse({
       "success": True,
       "data":sidebarList
