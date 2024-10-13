@@ -41,7 +41,7 @@
             <div class="modal-body">
                <div class="msg"></div>
                 <input type="hidden" name="menuid" value="{{parentId}}" />                     
-                <div class="form-group" id="name-field">
+                <div id="name-field">
                     <label for="module">Menu</label>
                     <input type="text" class="form-control" required name="menu"  placeholder="Enter label">
                 </div>
@@ -81,8 +81,12 @@ function addModel(method,post={}){
         success: function (response) {
             if(response.success && method=='GET'){
                 $('#AddEditModel').modal('show'); 
-                $('#name-field').html(`<label for="module">Menu</label>
-                    <input type="text" class="form-control" required name="menu"  placeholder="Enter label">`)
+                $('#name-field').html(`
+                <div class="form-group">
+                    <label for="module">Menu</label>
+                    <input type="text" class="form-control" required name="menu"  placeholder="Enter label">
+                </div>
+                `)
             }else if(response.success && method=='POST'){
                 $('#AddEditModel').modal('hide'); 
                 $('#AddEditForm').trigger("reset");
@@ -103,11 +107,22 @@ function editModel(method,menuId,post={}){
         success: function (response) {
             if(response.success && method=='GET'){
                 $('#AddEditModel').modal('show'); 
-                $('#name-field').html(`<label for="module">Menu</label>
+                $('#name-field').html(`
+                <div class="form-group">
+                   <label for="module">Menu</label>
                     <input type="text" class="form-control" required name="menu" value="${response.name}"  
                     placeholder="Enter label">
                     <input type="hidden" required name="id" value="${response.menuId}" >
-                    `)
+                </div>
+                <div class="form-check mt-2">
+                    
+                    
+                    <input class="form-check-input" type="checkbox" name="status" ${(response.status==1) ? 'checked':''} value="1" id="status">
+                    <label class="form-check-label" for="status">
+                        Status
+                    </label>
+                </div>
+                `)
                 
             }else if(response.success && method=='POST'){
                 $('#AddEditModel').modal('hide'); 

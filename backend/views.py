@@ -120,7 +120,6 @@ def permission(request,*args,**kwargs):
    else:
       return render(request,"admin/permission/index.html")
 
-
 @permission_required()
 def module(request,*args,**kwargs):
    parentId = kwargs.get('parentId', '')
@@ -150,7 +149,7 @@ def module(request,*args,**kwargs):
             permission = {
                "id":i.id,
                "module":module,
-               "action":(f'<a href="{settings.BASE_URL}admin/administration/module/{i.id}/delete" class="btn btn-sm btn-danger" >Delete</a>')
+               # "action":(f'<a href="{settings.BASE_URL}admin/administration/module/{i.id}/delete" class="btn btn-sm btn-danger" >Delete</a>')
             }  
             listData.append(permission)
       
@@ -479,7 +478,7 @@ def menuList(request,*args,**kwargs):
                "id":i.id,
                "name":f"<a href='{settings.BASE_URL}admin/movie/menu/{i.id}'>{i.name}</a>",
                "action":f"<button class='btn btn-sm btn-info mx-1' onclick=editModel('GET',{i.id})>Edit</button>"
-                        f"<a class='btn btn-sm btn-primary mx-1' href='{settings.BASE_URL}admin/movie/menu/{i.id}/delete'>Delete</a>"
+                        # f"<a class='btn btn-sm btn-primary mx-1' href='{settings.BASE_URL}admin/movie/menu/{i.id}/delete'>Delete</a>"
             }
             listData.append(objects)
 
@@ -507,6 +506,7 @@ def menuAdd(request,*args,**kwargs):
          if 'id' in post and 'Edit' in kwargs.get('permission'):
             menu = Menu.objects.get(id=post['id'])
             menu.name = post['menu']
+            menu.status = post.get('status', 0) 
             menu.save()
          else:
             menu = Menu.objects.create(
@@ -536,7 +536,8 @@ def menuEdit(request,*args,**kwargs):
          return JsonResponse({
             "success": True,
             "name":menu.name,
-            "menuId":menu.id
+            "menuId":menu.id,
+            "status":menu.status
          }, status=200)   
     else:
          return JsonResponse({
