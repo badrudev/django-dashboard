@@ -23,14 +23,19 @@ def permission_required():
             if 1 in userGroupIds:
                 module_id = Module.objects.filter(url=access).values_list('id', flat=True).first()
                 permission = ModuleAction.objects.filter(module_id=module_id).values_list('permission', flat=True).first()
-                kwargs['moduleIds'] = Module.objects.values_list('id',flat=True)
-                kwargs['permission'] = permission.split(",")
-                kwargs['groupIds'] = Group.objects.values_list('id', flat=True)
+                print(module_id)
+                if permission:
+                    kwargs['moduleIds'] = Module.objects.values_list('id',flat=True)
+                    kwargs['permission'] = permission.split(",")
+                    
+                    kwargs['groupIds'] = Group.objects.values_list('id', flat=True)
             else:
                 groupList = GroupPermission.objects.filter(group__in=userGroupIds,permission__icontains='View').all()
                 kwargs['groupIds'] = userGroupIds
+                
                 for item in groupList:
                     kwargs['moduleIds'].append(item.module_id)
+                    
                     if access==item.module.url:
                         access = item.permission.split(",")
                         kwargs['permission'].extend(access)

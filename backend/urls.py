@@ -17,6 +17,7 @@ urlpatterns = [
 
         # Administration Url
         path('administration/permission',views.permission),
+        path('administration/permission/add',views.addEditPermission),
         path('administration/permission/<int:roleId>/',views.rolePermission,name="role-permission"),
         path('administration/permission/<int:roleId>/<int:parentId>',views.rolePermission),
         path('administration/permission/save/<int:roleId>',views.savePermission,name="save-permission"),

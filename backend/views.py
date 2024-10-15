@@ -76,11 +76,10 @@ def dashboard(request):
 
 @permission_required()
 def permission(request,*args,**kwargs):
-
    if request.method == 'POST':
       listData = []
       totalLen=0
-      if set(['View']).issubset(kwargs.get('permission')):
+      if 'View' in kwargs.get('permission'):
          start = request.POST['start']
          length = request.POST['length']
          search = request.POST['search']
@@ -89,7 +88,7 @@ def permission(request,*args,**kwargs):
          
          allowed = list(UserAllow.objects.filter(group__in=kwargs.get('groupIds')).values_list('allow', flat=True))
          permission = allowed[0].split(",") if allowed else []
-
+         print(permission)
          if search :
             data = Group.objects.filter(name__contains=search,id__in=permission)[startIndex:endIndex].all()
             totalLen = Group.objects.filter(name__contains=search,id__in=permission).count()
@@ -109,16 +108,46 @@ def permission(request,*args,**kwargs):
 
                listData.append(permission)
       
+         
       return JsonResponse({
          "success": True,
          "iTotalRecords":totalLen,
          "iTotalDisplayRecords":totalLen,
          "aaData":listData
       }, status=200)
-
+   
       # return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
    else:
       return render(request,"admin/permission/index.html")
+
+
+@xhr_request_only()
+def addEditPermission(request,*args,**kwargs):
+    groupIds = kwargs.get('groupIds')
+    if 'Add' in kwargs.get('permission'):
+      if request.method == 'POST':
+         post = request.POST
+         pass
+         print(request.user.group)
+         # group = Group.objects.create(
+         #    name=post['group']             
+         # )
+
+         # UserAllow.objects.create(
+         #    group=group,
+         #    user = request.user           
+         # )
+        
+      return JsonResponse({
+         "success": True,
+         "status":"Successfully added!",
+      }, status=200)   
+    else:
+         return JsonResponse({
+            "success": False,
+            "access":"You don't have add permission!"
+         }, status=200) 
+
 
 @permission_required()
 def module(request,*args,**kwargs):
@@ -339,6 +368,51 @@ def savePermission(request,*args,**kwargs):
                   )
       
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+# @permission_required() 
+# def group(request,*args,**kwargs):
+#    if request.method == 'POST':
+#       listData = []
+#       totalLen=0
+#       if set(['View']).issubset(kwargs.get('permission')):
+#          start = request.POST['start']
+#          length = request.POST['length']
+#          search = request.POST['search']
+#          startIndex = (int(start)-1) * int(length)
+#          endIndex = startIndex + int(length)
+         
+#          allowed = list(UserAllow.objects.filter(group__in=kwargs.get('groupIds')).values_list('allow', flat=True))
+#          permission = allowed[0].split(",") if allowed else []
+#          print(allowed)
+#          if search :
+#             data = Group.objects.filter(name__contains=search,id__in=permission)[startIndex:endIndex].all()
+#             totalLen = Group.objects.filter(name__contains=search,id__in=permission).count()
+            
+#          else:
+#             data = Group.objects.filter(id__in=permission)[startIndex:endIndex].all()
+#             totalLen = Group.objects.filter(id__in=permission).count()
+
+        
+#          for i in data:
+               
+#                permission = {
+#                "id":i.id,
+#                "name":i.name,
+#                "action":(f'<a class="btn btn-primary" href="{settings.BASE_URL}admin/administration/permission/{i.id}" >Permission</a>')
+#                }
+
+#                listData.append(permission)
+      
+#       return JsonResponse({
+#          "success": True,
+#          "iTotalRecords":totalLen,
+#          "iTotalDisplayRecords":totalLen,
+#          "aaData":listData
+#       }, status=200)
+
+#       # return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+#    else:
+#       return render(request,"admin/permission/group.html")
 
 
 """ 

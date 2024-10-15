@@ -9,6 +9,8 @@
 
 <div class="container mt-2">
 
+    <button class="btn btn-sm btn-primary my-2" id="add-module">Add Group</button>
+
     <div class="row">
         <div class="col-12">
             <table id="customer_table"  class="display" style="width:100%">
@@ -27,7 +29,7 @@
   
 </div>
 <!-- Delete -->
-<div class="modal fade" id="DelModel" tabindex="-1" role="dialog" aria-labelledby="DelModel" aria-hidden="true">
+<!-- <div class="modal fade" id="DelModel" tabindex="-1" role="dialog" aria-labelledby="DelModel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <form class="modal-content" method="post">
         {% csrf_token %}
@@ -50,7 +52,35 @@
             </div>
         </form>
     </div>
+</div> -->
+
+<!-- Add-Edit -->
+<div class="modal fade" id="AddEditModel" tabindex="-1" role="dialog" aria-labelledby="AddEditModel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <form class="modal-content" method="post" id="AddEditForm">
+        {% csrf_token %}
+            <div class="modal-header">
+                <h5 class="modal-title" id="AddEditTitle">Group</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+               <div class="msg"></div>            
+                <div class="form-group">
+                    <label for="module">Group</label>
+                    <input type="text" class="form-control" required name="group" id="group"  placeholder="Enter label">
+                </div>
+               
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">Save </button>
+            </div>
+      </form>
+    </div>
 </div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
 <script>
@@ -59,9 +89,46 @@ $(document).ready( function () {
     loadData()
 })
 
+    $('#AddEditForm').submit(function(e){
+        e.preventDefault()
+        console.log($(this).serializeArray())
+        addEditModel('POST',$(this).serialize())
+    })
+
+    $('#add-module').click(function(){
+        addEditModel('GET',{})
+    })
+
+    function addEditModel(method,post={},moduleId){
+        $.ajax({
+            type: method,
+            url: "{{ settings.BASE_URL }}permission/add",
+            headers: {'X-CSRFToken': csrftoken},
+            data:post,
+            success: function (response) {
+                if(response.success && method=='GET'){
+                    $('#AddEditModel').modal('show'); 
+                    if(moduleId){
+                        $('#module_id').val(moduleId)
+                    }
+                }else if(response.success && method=='POST'){
+                    $('#AddEditModel').modal('hide'); 
+                    loadData()
+                }
+            },
+            error: function (response) {
+                alert(response["responseJSON"]["error"]);
+            }
+        })
+    }
+  
 
 
 function loadData(){
+    let table = $('table.display')
+    if($.fn.dataTable.isDataTable(table)) {
+        table.DataTable().destroy();
+    }
     var pgno = 0;
     $('table.display').DataTable({
             "processing" : true,
@@ -99,11 +166,11 @@ function loadData(){
 }
 
 
-function delModel(mid){
-    $('#DelModel').modal('show');
-    $('[name="delid"]').val(mid);
+// function delModel(mid){
+//     $('#DelModel').modal('show');
+//     $('[name="delid"]').val(mid);
     
-}
+// }
 </script>
 </div>
 

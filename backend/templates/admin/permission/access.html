@@ -8,7 +8,9 @@
 
 
 <div class="container mt-2">
-   
+    {% if parentId == None %}
+        <button class="btn btn-sm btn-primary my-2" id="add-module">Add Group</button>
+    {% endif %}
     <h4>Permission</h4>
     <div class="row">
         <form class="col-12" action="{{ settings.BASE_URL }}/admin/administration/permission/save/{{roleId}}" method="post">
