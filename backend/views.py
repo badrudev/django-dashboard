@@ -146,9 +146,10 @@ def addEditPermission(request,*args,**kwargs):
                   i.allow = allow +","+ str(group.id)
                   i.save()
          else:
+            grpId = ",".join(map(str, kwargs.get('userGroup')))
             UserAllow.objects.create(
                allow=group.id,
-               group=group
+               group=Group.objects.get(id=grpId)
             )
       return JsonResponse({
          "success": True,
