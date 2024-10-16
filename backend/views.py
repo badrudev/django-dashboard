@@ -134,19 +134,21 @@ def addEditPermission(request,*args,**kwargs):
     if 'Add' in kwargs.get('permission'):
       if request.method == 'POST':
          post = request.POST
-         print(post,kwargs.get('userGroup'))
          group = Group.objects.create(
             name=post['group']             
          )
          allow = UserAllow.objects.filter(group_id__in=kwargs.get('userGroup'))
          if allow.exists():
             for i in allow:
-               allow = i.allow
-               i.allow = allow +","+ group.id 
-               i.save()
+               grp = str(group.id)
+               if grp not in i.allow:
+                  allow = i.allow
+                  i.allow = allow +","+ str(group.id)
+                  i.save()
          else:
             UserAllow.objects.create(
-               allow=
+               allow=group.id,
+               group=group
             )
       return JsonResponse({
          "success": True,
