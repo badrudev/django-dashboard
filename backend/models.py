@@ -53,14 +53,14 @@ class ModuleAction(models.Model):
         return self.permission
 
 
-# class GroupAllow(models.Model):
-#     group = models.ForeignKey(Group, related_name="groupcreated", on_delete=models.CASCADE)
-#     user  = models.ForeignKey(User, related_name="groupuser", on_delete=models.CASCADE)
-#     created = models.DateField(auto_now_add=True)
-#     updated = models.DateField(auto_now=True)
+class GroupAllow(models.Model):
+    group = models.ForeignKey(Group, related_name="groupcreated", on_delete=models.CASCADE)
+    user  = models.ForeignKey(User, related_name="groupuser", on_delete=models.CASCADE)
+    created = models.DateField(auto_now_add=True)
+    updated = models.DateField(auto_now=True)
 
-#     class Meta:
-#         ordering = ['-created']
+    class Meta:
+        ordering = ['-created']
 
-#     def __str__(self):
-#         return self.group
+    def __str__(self):
+        return self.group

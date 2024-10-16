@@ -17,17 +17,16 @@ def permission_required():
             
             userGroupIds = list(request.user.groups.values_list('id', flat=True))
             # kwargs['allows'] = list(UserAllow.objects.filter(group__in=userGroupIds).values_list('allow', flat=True))
+            kwargs['userGroup'] = userGroupIds
             groupList=[]
             kwargs['moduleIds'] = []
             kwargs['permission'] = []
             if 1 in userGroupIds:
                 module_id = Module.objects.filter(url=access).values_list('id', flat=True).first()
                 permission = ModuleAction.objects.filter(module_id=module_id).values_list('permission', flat=True).first()
-                print(module_id)
                 if permission:
                     kwargs['moduleIds'] = Module.objects.values_list('id',flat=True)
                     kwargs['permission'] = permission.split(",")
-                    
                     kwargs['groupIds'] = Group.objects.values_list('id', flat=True)
             else:
                 groupList = GroupPermission.objects.filter(group__in=userGroupIds,permission__icontains='View').all()
@@ -60,9 +59,10 @@ def xhr_request_only():
                 url = request.path.split('/')
                 filterUrl = url[1:4]
                 access = "/".join(filterUrl)
+                
                 userGroupIds = list(request.user.groups.values_list('id', flat=True))
                 # kwargs['allows'] = list(UserAllow.objects.filter(group__in=userGroupIds).values_list('allow', flat=True))
-                
+                kwargs['userGroup'] = userGroupIds
                 groupList=[]
                 kwargs['moduleIds'] = []
                 kwargs['permission'] = []

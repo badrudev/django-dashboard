@@ -6,3 +6,4 @@ admin.site.register(Module)
 admin.site.register(GroupPermission)
 admin.site.register(UserAllow)
 admin.site.register(ModuleAction)
+

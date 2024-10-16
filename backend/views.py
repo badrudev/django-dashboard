@@ -88,7 +88,6 @@ def permission(request,*args,**kwargs):
          
          allowed = list(UserAllow.objects.filter(group__in=kwargs.get('groupIds')).values_list('allow', flat=True))
          permission = allowed[0].split(",") if allowed else []
-         print(permission)
          if search :
             data = Group.objects.filter(name__contains=search,id__in=permission)[startIndex:endIndex].all()
             totalLen = Group.objects.filter(name__contains=search,id__in=permission).count()
@@ -103,7 +102,8 @@ def permission(request,*args,**kwargs):
                permission = {
                "id":i.id,
                "roleName":i.name,
-               "action":(f'<a class="btn btn-primary" href="{settings.BASE_URL}admin/administration/permission/{i.id}" >Permission</a>')
+               "action":f'<a class="btn btn-primary" href="{settings.BASE_URL}admin/administration/permission/{i.id}" >Permission</a>'
+                        # f'<a class="btn btn-danger" href="{settings.BASE_URL}admin/administration/permission/{i.id}/delete" >Delete</a>'
                }
 
                listData.append(permission)
@@ -120,6 +120,13 @@ def permission(request,*args,**kwargs):
    else:
       return render(request,"admin/permission/index.html")
 
+@permission_required()
+def deletePermission(request,*args,**kwargs):
+    if 'Delete' in kwargs.get('permission'):
+        groupId = kwargs.get('roleId')
+        Group.objects.filter(id=groupId).delete()
+        GroupAllow.objects.filter(group_id=groupId,user=request.user).delete()          
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])    
 
 @xhr_request_only()
 def addEditPermission(request,*args,**kwargs):
@@ -127,17 +134,20 @@ def addEditPermission(request,*args,**kwargs):
     if 'Add' in kwargs.get('permission'):
       if request.method == 'POST':
          post = request.POST
-         pass
-         print(request.user.group)
-         # group = Group.objects.create(
-         #    name=post['group']             
-         # )
-
-         # UserAllow.objects.create(
-         #    group=group,
-         #    user = request.user           
-         # )
-        
+         print(post,kwargs.get('userGroup'))
+         group = Group.objects.create(
+            name=post['group']             
+         )
+         allow = UserAllow.objects.filter(group_id__in=kwargs.get('userGroup'))
+         if allow.exists():
+            for i in allow:
+               allow = i.allow
+               i.allow = allow +","+ group.id 
+               i.save()
+         else:
+            UserAllow.objects.create(
+               allow=
+            )
       return JsonResponse({
          "success": True,
          "status":"Successfully added!",
