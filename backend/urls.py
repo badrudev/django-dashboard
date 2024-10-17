@@ -15,7 +15,7 @@ urlpatterns = [
         # Dashboard Url
         path('dashboard/', views.dashboard, name ='dashboard'),
 
-        # Administration Url
+        # Administration permission
         path('administration/permission',views.permission),
         path('administration/permission/<int:roleId>/delete',views.deletePermission),
         path('administration/permission/add',views.addEditPermission),
@@ -23,11 +23,22 @@ urlpatterns = [
         path('administration/permission/<int:roleId>/<int:parentId>',views.rolePermission),
         path('administration/permission/save/<int:roleId>',views.savePermission,name="save-permission"),
 
+        # Administration module
         path('administration/module/',views.module,name="module"),
         path('administration/module/<int:parentId>',views.module,name="module"),
         path('administration/module/add/',views.addEditModule),
         path('administration/module/add/<int:parentId>',views.addEditModule),
         path('administration/module/<int:moduleId>/delete',views.deleteModule),
+
+        # Administration user
+        path('administration/user',views.user,name="user"),
+        path('administration/user/add/<int:userId>',views.addEditUser),
+        path('administration/user/add/',views.addEditUser),
+        # path('administration/module/<int:parentId>',views.module,name="module"),
+        # path('administration/module/add/',views.addEditModule),
+        # path('administration/module/add/<int:parentId>',views.addEditModule),
+        # path('administration/module/<int:moduleId>/delete',views.deleteModule),
+
 
         # path('administration/group/',views.group,name="group"),
         # path('administration/group/add/',views.addEditGroup),

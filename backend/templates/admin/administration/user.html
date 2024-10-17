@@ -1,0 +1,146 @@
+
+{% extends "layout/base.html" %}
+
+
+{% block start %}
+<div class="container d-flex justify-content-center">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css" />
+
+
+<div class="container mt-2">
+    <h4>User</h4>
+    <div class="row"> 
+            <table id="customer_table"  class="display" style="width:100%">
+                {% csrf_token %}
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>User</th>
+                        <th>Group</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+               
+            </table>
+            
+      </div>
+  
+</div>
+<!-- Add-Edit -->
+<div class="modal fade" id="AddEditModel" tabindex="-1" role="dialog" aria-labelledby="AddEditModel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <form class="modal-content" method="post" action="{{ settings.BASE_URL }}add/{{parentId}}" id="AddEditForm">
+        {% csrf_token %}
+            <div class="modal-header">
+                <h5 class="modal-title" id="AddEditTitle">Modal</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="form-body">
+
+               
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">Save </button>
+            </div>
+      </form>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
+<script>
+const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+$(document).ready( function () {
+    loadData()
+    $('#AddEditForm').submit(function(e){
+        e.preventDefault()
+        console.log($(this).serializeArray())
+        addEditModel('POST',$(this).serialize(),)
+    })
+})
+
+function addEditModel(method,post={},userId=''){
+    $.ajax({
+        type: method,
+        url: "{{ settings.BASE_URL }}user/add/"+userId,
+        headers: {'X-CSRFToken': csrftoken},
+        data:post,
+        success: function (response) {
+            if(response.status && method=='GET'){
+                $('#AddEditModel').modal('show'); 
+                if(userId){
+                    let html = `<input type="hidden" name="user" id="user_id" value="${userId}" />             
+                        <div class="form-group">
+                            <label for="module">Name</label>
+                            <input type="text" class="form-control" value="${response.user[0].first_name}" required name="username" id="module"  placeholder="Enter label">
+                        </div>
+                        <div class="form-group">
+                            <label for="module">Group</label>
+                            <select class="form-control" name="group">`
+                                response.group.forEach(element => {
+                                    html+=  `<option value="${element.id}">${element.name}</option>`
+                                });
+                    html+=  `</select>
+                        </div> `
+                    $('#form-body').html(html)
+                }
+            }else if(response.success && method=='POST'){
+                $('#AddEditModel').modal('hide'); 
+                loadData()
+            }
+        },
+        error: function (response) {
+            alert(response["responseJSON"]["error"]);
+        }
+    })
+}
+
+
+
+
+var table;
+function loadData(){
+    var pgno = 1;
+    var table = $('table.display');
+    if($.fn.dataTable.isDataTable(table)) {
+            table.DataTable().destroy();
+    }
+    $('table.display').DataTable({
+        "processing" : true,
+        "serverSide" : true,
+        pageLength : 8,
+        ajax: function (data, callback, settings) {
+            var api = this.api();
+            var search = api.search() 
+            var pageInfo = api.page.info();
+            pgno = pageInfo.page+1;
+            $.ajax({
+                url: "{{ settings.BASE_URL }}/admin/administration/user",
+                method:"POST",
+                headers: {'X-CSRFToken': csrftoken},
+                data:{start:pgno, length:8,search:search},
+            }).then ( function( json, textStatus, jqXHR ) {
+                callback(json);
+                console.log(json)
+            });
+        },
+        columns: [
+            { data: "id" },
+            { data: "user" },
+            { data: "group" },
+            { data: "action" },
+            
+        ],  
+    });
+   
+}
+
+
+
+</script>
+</div>
+
+{% endblock %}

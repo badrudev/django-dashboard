@@ -382,51 +382,82 @@ def savePermission(request,*args,**kwargs):
       
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-# @permission_required() 
-# def group(request,*args,**kwargs):
-#    if request.method == 'POST':
-#       listData = []
-#       totalLen=0
-#       if set(['View']).issubset(kwargs.get('permission')):
-#          start = request.POST['start']
-#          length = request.POST['length']
-#          search = request.POST['search']
-#          startIndex = (int(start)-1) * int(length)
-#          endIndex = startIndex + int(length)
+@permission_required() 
+def user(request,*args,**kwargs):
+   if request.method == 'POST':
+      listData = []
+      totalLen=0
+      if set(['View']).issubset(kwargs.get('permission')):
+         start = request.POST['start']
+         length = request.POST['length']
+         search = request.POST['search']
+         startIndex = (int(start)-1) * int(length)
+         endIndex = startIndex + int(length)
          
-#          allowed = list(UserAllow.objects.filter(group__in=kwargs.get('groupIds')).values_list('allow', flat=True))
-#          permission = allowed[0].split(",") if allowed else []
-#          print(allowed)
-#          if search :
-#             data = Group.objects.filter(name__contains=search,id__in=permission)[startIndex:endIndex].all()
-#             totalLen = Group.objects.filter(name__contains=search,id__in=permission).count()
+         allowed = list(UserAllow.objects.filter(group__in=kwargs.get('groupIds')).values_list('allow', flat=True))
+         permission = allowed[0].split(",") if allowed else []
+
+         if search :
+            data = Group.objects.filter(name__contains=search,id__in=permission)[startIndex:endIndex].all()
+            totalLen = Group.objects.filter(name__contains=search,id__in=permission).count()
             
-#          else:
-#             data = Group.objects.filter(id__in=permission)[startIndex:endIndex].all()
-#             totalLen = Group.objects.filter(id__in=permission).count()
+         else:
+            data = Group.objects.filter(id__in=permission)[startIndex:endIndex].all()
+            totalLen = Group.objects.filter(id__in=permission).count()
 
-        
-#          for i in data:
-               
-#                permission = {
-#                "id":i.id,
-#                "name":i.name,
-#                "action":(f'<a class="btn btn-primary" href="{settings.BASE_URL}admin/administration/permission/{i.id}" >Permission</a>')
-#                }
 
-#                listData.append(permission)
+         for i in data:
+               # print(i.groups.filter(id__in=permission).all())
+               users = i.user_set.all()
+               for v in users:
+                  user = {
+                  "id":v.id,
+                  "user":v.first_name,
+                  "group":i.name,
+                  "action":f'<button class="btn btn-primary mx-1" onclick=addEditModel("GET","",{v.id})  >Edit</button>'
+                           f'<a class="btn btn-danger mx-1" href="{settings.BASE_URL}admin/administration/user/{v.id}" >Delete</a>'
+                  }
+                  listData.append(user)
       
-#       return JsonResponse({
-#          "success": True,
-#          "iTotalRecords":totalLen,
-#          "iTotalDisplayRecords":totalLen,
-#          "aaData":listData
-#       }, status=200)
+      return JsonResponse({
+         "success": True,
+         "iTotalRecords":totalLen,
+         "iTotalDisplayRecords":totalLen,
+         "aaData":listData
+      }, status=200)
 
-#       # return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-#    else:
-#       return render(request,"admin/permission/group.html")
+      # return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+   else:
+      return render(request,"admin/administration/user.html")
 
+
+@permission_required() 
+def addEditUser(request,*args,**kwargs):
+   allowed = list(UserAllow.objects.filter(group__in=kwargs.get('groupIds')).values_list('allow', flat=True))
+   permission = allowed[0].split(",") if allowed else []
+   if request.method == 'POST' and set(['Edit']).issubset(kwargs.get('permission')):
+      post = request.POST
+      user = User.objects.get(id=post['user'])
+      user.first_name = post['username']
+      user.save()
+      return JsonResponse({
+         "success": True,
+         "msg":"Update Successfully!"
+      }, status=200)   
+   else:
+      context = {
+         "status":False,
+         "msg":"Not have edit permission!"
+      }
+      if set(['Edit']).issubset(kwargs.get('permission')):
+         user = list(User.objects.filter(id=kwargs.get('userId')).values())
+         group = list(Group.objects.filter(id__in=permission).values())
+         context['status'] = True
+         context['user'] = user
+         context['group'] = group
+         context['msg'] = "Successfully!"
+
+      return JsonResponse(context, status=200)   
 
 """ 
 @xhr_request_only()
