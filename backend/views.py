@@ -161,6 +161,123 @@ def addEditPermission(request,*args,**kwargs):
             "access":"You don't have add permission!"
          }, status=200) 
 
+@permission_required()
+def rolePermission(request,*args,**kwargs):
+    roleId = kwargs.get('roleId')
+    parentId = kwargs.get('parentId', '')
+    
+    if request.method == 'POST':
+      listData = []
+      totalLen=0
+      
+      if set(['View']).issubset(kwargs.get('permission')):
+         start = int(request.POST['start'])
+         length = int(request.POST['length'])
+         search = request.POST['search']
+         startIndex = (int(start)-1) * int(length)
+         endIndex = startIndex + int(length)
+         moduleIds = kwargs.get('moduleIds')
+         groupIds = kwargs.get('groupIds')
+         
+         if search :
+            data =  Module.objects.filter(module__contains=search,id__in=moduleIds).filter(Q(parent_id=parentId))[startIndex:endIndex].all()
+            totalLen = Module.objects.filter(module__contains=search,id__in=moduleIds).filter(Q(parent_id=parentId)).count()
+         else:
+            data =  Module.objects.filter(id__in=moduleIds).filter(Q(parent_id=parentId))[startIndex:endIndex].all()
+            totalLen = Module.objects.filter(id__in=moduleIds).filter(Q(parent_id=parentId)).count()
+
+         lst = {}
+         # allowed = GroupPermission.objects.filter(group=roleId).values('module','module_parent_id')
+
+         for i in data:
+            access_list = list(i.grouppermissions.filter(group=roleId).values_list('permission',flat=True))
+            
+            if len(access_list):
+               access_list= access_list[0].split(",")
+            per = f'<div class="d-flex">' 
+            if 1 in groupIds:
+               allow = ModuleAction.objects.filter(module_id=i.id).filter(Q(module_parent_id=i.parent_id)).all()
+            else:
+               allow = i.grouppermissions.filter(module_id=i.id,group_id__in=groupIds).filter(Q(module_parent_id=i.parent_id)).all()
+            
+            per +=f'<input type="hidden" name="permission[{i.id}][{i.parent_id}]" value="">'
+            for b in allow:
+               # per +=f'<input type="hidden" name="permission[{b.module_id}][{b.module_parent_id}]" value="">'
+               for c in b.permission.split(","):
+                  checked = 'checked' if c in access_list else ''
+                  per +=f'''
+                           <div class="form-check px-3">
+                              <input class="form-check-input" {checked} name="permission[{b.module_id}][{b.module_parent_id}]" type="checkbox" value="{c}" id="flexCheck{b.id}">
+                              <label class="form-check-label" for="flexCheck{b.id}">{c}</label>     
+                           </div>
+                        '''
+
+            per +='</div>'
+            permission = {
+               "id":i.id,
+               "moduleName":f'<a href="{settings.BASE_URL}admin/administration/permission/{roleId}/{i.id}">{i.module}</a>',
+               "permission":per,
+               "action":f'''
+                           <div class="form-check">
+                           <input class="form-check-input" type="checkbox" value="" >
+                           <label class="form-check-label" > All</label>
+                           </div>
+                        '''
+            }
+         
+            listData.append(permission)
+                      
+      return JsonResponse({
+         "success": True,
+         "iTotalRecords":totalLen,
+         "iTotalDisplayRecords":totalLen,
+         "aaData":listData
+      }, status=200)
+    else:
+      context = {
+         "roleId":roleId,
+         "parentId":parentId
+      }
+      return render(request,"admin/permission/access.html",context)
+
+@permission_required()  
+def savePermission(request,*args,**kwargs):
+    roleId = kwargs.get('roleId')
+    if request.method == 'POST':
+      moduleIds = kwargs.get('moduleIds')
+      groupIds = kwargs.get('groupIds')
+      moduleList =  Module.objects.filter(id__in=moduleIds).all()
+      remove = {}
+      if set(['Edit']).issubset(kwargs.get('permission')):
+         for i in moduleList:
+            if 1 in groupIds:
+               permission = ModuleAction.objects.filter(module_id=i.id).filter(Q(module_parent_id=i.parent_id)).values('module','module_parent_id','permission')
+            else:
+               permission = i.grouppermissions.objects.values('module','module_parent_id','permission')
+            for b in permission:
+               mid = b['module']
+               mpid = b['module_parent_id']
+               key = f'permission[{mid}][{mpid}]'
+               if key in request.POST:
+                  if mid not in remove:
+                     remove[mid]={'module_id':mid,'module_parent_id':mpid,'permission':request.POST.getlist(key)}
+         
+      
+         for item in remove:
+            if len(remove[item]):
+               mld = remove[item]           
+               GroupPermission.objects.filter(group=roleId,module=mld['module_id']).filter(Q(module_parent_id=mld['module_parent_id'])).delete()
+               access_list = [item for item in mld['permission'] if item]
+               if len(access_list):
+                  access_str = ','.join(access_list)
+                  GroupPermission.objects.create(
+                     permission=access_str,                  
+                     module_id=mld['module_id'],                  
+                     module_parent_id=mld['module_parent_id'],
+                     group_id=roleId
+                  )
+      
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 @permission_required()
 def module(request,*args,**kwargs):
@@ -264,123 +381,6 @@ def addEditModule(request,*args,**kwargs):
             "success": False,
             "access":"You don't have add permission!"
          }, status=200)   
-
-@permission_required()
-def rolePermission(request,*args,**kwargs):
-    roleId = kwargs.get('roleId')
-    parentId = kwargs.get('parentId', '')
-    
-    if request.method == 'POST':
-      listData = []
-      totalLen=0
-      
-      if set(['View']).issubset(kwargs.get('permission')):
-         start = int(request.POST['start'])
-         length = int(request.POST['length'])
-         search = request.POST['search']
-         startIndex = (int(start)-1) * int(length)
-         endIndex = startIndex + int(length)
-         moduleIds = kwargs.get('moduleIds')
-         groupIds = kwargs.get('groupIds')
-         
-         if search :
-            data =  Module.objects.filter(module__contains=search,id__in=moduleIds).filter(Q(parent_id=parentId))[startIndex:endIndex].all()
-            totalLen = Module.objects.filter(module__contains=search,id__in=moduleIds).filter(Q(parent_id=parentId)).count()
-         else:
-            data =  Module.objects.filter(id__in=moduleIds).filter(Q(parent_id=parentId))[startIndex:endIndex].all()
-            totalLen = Module.objects.filter(id__in=moduleIds).filter(Q(parent_id=parentId)).count()
-
-         lst = {}
-         allowed = GroupPermission.objects.filter(group=roleId).values('module','module_parent_id')
-      
-         for i in data:
-            access_list = list(i.grouppermissions.filter(group=roleId).values_list('permission',flat=True))
-            if len(access_list):
-               access_list= access_list[0].split(",")
-            per = f'<div class="d-flex">' 
-            if 1 in groupIds:
-               allow = ModuleAction.objects.filter(module_id=i.id).filter(Q(module_parent_id=i.parent_id)).all()
-            else:
-               allow = i.grouppermissions.filter(module_id=i.id).filter(Q(module_parent_id=i.parent_id)).all()
-
-            per +=f'<input type="hidden" name="permission[{i.id}][{i.parent_id}]" value="">'
-            for b in allow:
-               # per +=f'<input type="hidden" name="permission[{b.module_id}][{b.module_parent_id}]" value="">'
-               for c in b.permission.split(","):
-                  checked = 'checked' if c in access_list else ''
-                  per +=f'''
-                           <div class="form-check px-3">
-                              <input class="form-check-input" {checked} name="permission[{b.module_id}][{b.module_parent_id}]" type="checkbox" value="{c}" id="flexCheck{b.id}">
-                              <label class="form-check-label" for="flexCheck{b.id}">{c}</label>     
-                           </div>
-                        '''
-
-            per +='</div>'
-            permission = {
-               "id":i.id,
-               "moduleName":f'<a href="{settings.BASE_URL}admin/administration/permission/{roleId}/{i.id}">{i.module}</a>',
-               "permission":per,
-               "action":f'''
-                           <div class="form-check">
-                           <input class="form-check-input" type="checkbox" value="" >
-                           <label class="form-check-label" > All</label>
-                           </div>
-                        '''
-            }
-         
-            listData.append(permission)
-                      
-      return JsonResponse({
-         "success": True,
-         "iTotalRecords":totalLen,
-         "iTotalDisplayRecords":totalLen,
-         "aaData":listData
-      }, status=200)
-    else:
-      context = {
-         "roleId":roleId,
-         "parentId":parentId
-      }
-      return render(request,"admin/permission/access.html",context)
-
-@permission_required()  
-def savePermission(request,*args,**kwargs):
-    roleId = kwargs.get('roleId')
-    if request.method == 'POST':
-      moduleIds = kwargs.get('moduleIds')
-      groupIds = kwargs.get('groupIds')
-      moduleList =  Module.objects.filter(id__in=moduleIds).all()
-      remove = {}
-      if set(['Edit']).issubset(kwargs.get('permission')):
-         for i in moduleList:
-            if 1 in groupIds:
-               permission = ModuleAction.objects.filter(module_id=i.id).filter(Q(module_parent_id=i.parent_id)).values('module','module_parent_id','permission')
-            else:
-               permission = i.grouppermissions.objects.values('module','module_parent_id','permission')
-            for b in permission:
-               mid = b['module']
-               mpid = b['module_parent_id']
-               key = f'permission[{mid}][{mpid}]'
-               if key in request.POST:
-                  if mid not in remove:
-                     remove[mid]={'module_id':mid,'module_parent_id':mpid,'permission':request.POST.getlist(key)}
-         
-      
-         for item in remove:
-            if len(remove[item]):
-               mld = remove[item]           
-               GroupPermission.objects.filter(group=roleId,module=mld['module_id']).filter(Q(module_parent_id=mld['module_parent_id'])).delete()
-               access_list = [item for item in mld['permission'] if item]
-               if len(access_list):
-                  access_str = ','.join(access_list)
-                  GroupPermission.objects.create(
-                     permission=access_str,                  
-                     module_id=mld['module_id'],                  
-                     module_parent_id=mld['module_parent_id'],
-                     group_id=roleId
-                  )
-      
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 @permission_required() 
 def user(request,*args,**kwargs):
