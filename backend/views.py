@@ -243,17 +243,22 @@ def rolePermission(request,*args,**kwargs):
 @permission_required()  
 def savePermission(request,*args,**kwargs):
     roleId = kwargs.get('roleId')
+    
     if request.method == 'POST':
       moduleIds = kwargs.get('moduleIds')
       groupIds = kwargs.get('groupIds')
       moduleList =  Module.objects.filter(id__in=moduleIds).all()
       remove = {}
+      
       if set(['Edit']).issubset(kwargs.get('permission')):
+
          for i in moduleList:
             if 1 in groupIds:
                permission = ModuleAction.objects.filter(module_id=i.id).filter(Q(module_parent_id=i.parent_id)).values('module','module_parent_id','permission')
             else:
-               permission = i.grouppermissions.objects.values('module','module_parent_id','permission')
+               # permission = i.grouppermissions.objects.values('module','module_parent_id','permission')
+               permission = GroupPermission.objects.filter(module_id=i.id).filter(Q(module_parent_id=i.parent_id)).values('module','module_parent_id','permission')
+            
             for b in permission:
                mid = b['module']
                mpid = b['module_parent_id']
@@ -262,7 +267,7 @@ def savePermission(request,*args,**kwargs):
                   if mid not in remove:
                      remove[mid]={'module_id':mid,'module_parent_id':mpid,'permission':request.POST.getlist(key)}
          
-      
+ 
          for item in remove:
             if len(remove[item]):
                mld = remove[item]           
@@ -451,20 +456,21 @@ def addEditUser(request,*args,**kwargs):
       }
       if set(['Edit']).issubset(kwargs.get('permission')):
          user = list(User.objects.filter(id=kwargs.get('userId')).values())
-         allowed = list(UserAllow.objects.filter(group__in=kwargs.get('groupIds')).all())
          group = list(Group.objects.filter(id__in=permission).values())
-         permission = []
-         for p in allowed:
-            if p.allow:
-               allow = {
-               "id":p.id,
-               "group":list(Group.objects.filter(id__in=p.allow.split(",")).values())
-               }
-               permission.append(allow)
+         # allowed = list(UserAllow.objects.filter(group__in=kwargs.get('groupIds')).all())
+         # permission = []
+         # for p in allowed:
+         #    if p.allow:
+         #       allow = {
+         #       "id":p.id,
+         #       "group":list(Group.objects.filter(id__in=p.allow.split(",")).values())
+         #       }
+         #       permission.append(allow)
+
          context['status'] = True
          context['user'] = user
          context['group'] = group
-         context['allow'] = permission
+         # context['allow'] = permission
          context['msg'] = "Successfully!"
 
       return JsonResponse(context, status=200)   
