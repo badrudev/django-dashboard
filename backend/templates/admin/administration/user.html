@@ -5,7 +5,15 @@
 {% block start %}
 <div class="container d-flex justify-content-center">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css" />
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css">
+<style>
+.caret {
+  display: none;
+}
+.btn-group .multiselect {
+  border: 1px solid #ced4da;
+}
+</style>
 
 <div class="container mt-2">
     <h4>User</h4>
@@ -37,10 +45,8 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body" id="form-body">
-
-               
-            </div>
+            <div class="modal-body" id="form-body"></div>
+           
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 <button type="submit" class="btn btn-primary">Save </button>
@@ -57,9 +63,17 @@ $(document).ready( function () {
     loadData()
     $('#AddEditForm').submit(function(e){
         e.preventDefault()
-        console.log($(this).serializeArray())
-        addEditModel('POST',$(this).serialize(),)
+        // console.log($(this).serializeArray())
+        addEditModel('POST',$(this).serialize())
     })
+
+    $('.selectpicker').selectpicker({
+        noneSelectedText: 'Nothing selected', // Text displayed when no option is selected
+        countSelectedText: '{0} options selected', // Customize the text when items are selected
+        selectAllText: 'Select All', // Customize the "Select All" text
+        deselectAllText: 'Deselect All', // Customize the "Deselect All" text
+        liveSearchPlaceholder: 'Search options...' // Placeholder for the search box
+    });
 })
 
 function addEditModel(method,post={},userId=''){
@@ -84,9 +98,31 @@ function addEditModel(method,post={},userId=''){
                                     html+=  `<option value="${element.id}">${element.name}</option>`
                                 });
                     html+=  `</select>
-                        </div> `
-                    $('#form-body').html(html)
+                             </div>
+                                <div class="form-group">
+                                <label for="module">Select Permission</label>
+                                <select class="form-control" multiple name="allow">`
+                                if(response.allow.length){
+                                    response.allow[0].group.forEach(function(item){ 
+                                        html+= `<option value="${item.id}">${item.name}</option>`
+                                    })
+                                } 
+                    html+=      `</select>
+                             </div>
+                        `
+                    $('#form-body').html(html) 
+                    console.log(html)
+                    
                 }
+                let per = ''                                    
+                if(response.allow.length){
+                    response.allow[0].group.forEach(function(item){ 
+                        per+= `<option value="${item.id}">${item.name}</option>`
+                    })
+                    console.log(per)
+                    $('#allow').html(per) 
+                } 
+
             }else if(response.success && method=='POST'){
                 $('#AddEditModel').modal('hide'); 
                 loadData()

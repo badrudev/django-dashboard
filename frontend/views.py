@@ -4,7 +4,9 @@ from django.http import HttpResponseRedirect
 from frontend.models import *
 from django.db.models import Q
 from django.conf import settings
-
+from backend.decorators import (
+   xhr_request_only
+)
 
 def home(request):
     if request.method == 'POST':
@@ -54,21 +56,19 @@ def home(request):
       
       return render(request,"home.html",context)
 
-   
-def menuList(request):
-   if request.method == 'POST':
-      menus =  Menu.objects.filter(status="1").all()
-      MenuHtml = ''
-      
-      for m in menus:
-         if m.menuId == None:
-            MenuHtml += (f'<li><button class="nav-link dropdown-btn" data-dropdown="dropdown{m.id}" aria-haspopup="true" aria-expanded="false" aria-label="discover">{m.name}<i class="bx bx-chevron-down" aria-hidden="true"></i></button>'
-                         f'{menuLoop(menus,m.id)}'
-                         f'</li>')
-      return JsonResponse({
-               "Success": True,
-               "Menus":MenuHtml
-            }, status=200)
+@xhr_request_only()
+def menuList(request, *args, **kwargs):
+   menus =  Menu.objects.filter(status="1").all()
+   MenuHtml = ''
+   for m in menus:
+      if m.menuId == "":
+         MenuHtml += (f'<li><button class="nav-link dropdown-btn" data-dropdown="dropdown{m.id}" aria-haspopup="true" aria-expanded="false" aria-label="discover">{m.name}<i class="bx bx-chevron-down" aria-hidden="true"></i></button>'
+                        f'{menuLoop(menus,m.id)}'
+                        f'</li>')         
+   return JsonResponse({
+            "Success": True,
+            "Menus":MenuHtml
+         }, status=200)
 
 
 def menuLoop(Menus=[],MenuId=None,IsLoop=None):

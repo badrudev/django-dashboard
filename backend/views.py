@@ -451,10 +451,20 @@ def addEditUser(request,*args,**kwargs):
       }
       if set(['Edit']).issubset(kwargs.get('permission')):
          user = list(User.objects.filter(id=kwargs.get('userId')).values())
+         allowed = list(UserAllow.objects.filter(group__in=kwargs.get('groupIds')).all())
          group = list(Group.objects.filter(id__in=permission).values())
+         permission = []
+         for p in allowed:
+            if p.allow:
+               allow = {
+               "id":p.id,
+               "group":list(Group.objects.filter(id__in=p.allow.split(",")).values())
+               }
+               permission.append(allow)
          context['status'] = True
          context['user'] = user
          context['group'] = group
+         context['allow'] = permission
          context['msg'] = "Successfully!"
 
       return JsonResponse(context, status=200)   

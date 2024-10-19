@@ -556,14 +556,12 @@ button {
 
 $(document).ready(function(){
   $.ajax({
-    type: 'POST',
+    type: 'GET',
     url: "{{ settings.BASE_URL }}/menuList",
     headers: {'X-CSRFToken': csrftoken},
-    data: {type:'EDIT'},
     success: function (response) {
         if(response.Success){
           $('.menu-bar').html(response.Menus)
-         
         } 
     },
     error: function (response) {
