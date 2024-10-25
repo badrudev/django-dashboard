@@ -13,6 +13,7 @@
     border-top: 1px solid rgba(34, 36, 38, .1);
     box-shadow: none;
   }
+
 </style>
 
     <div class="container-fluid">
@@ -84,21 +85,77 @@
                     </div>
                   </div>
                 </div>
-                 
-                
-                  
-                  
-              </div>
-                  
+              </div>     
           </div>
        </div>
-        
+       <div class="row">
+        <div class="col-md-12 col-sm-12 col-lg-8 ">
+          <p>Comments</p>
+          <div class="comment">
+            <div class="card mb-2">
+              <div class="card-body p-2">
+                <h6 class="card-title mb-0">Card title</h6>
+                <small class="card-subtitle mb-2 text-muted">5 hours ago</small>
+                <p class="card-text mb-2">Some quick example text to build on the card</p>
+                <button class="card-link replay" >Replay</button>
+                <button  class="card-link">More</button>
+              </div>
+            </div>
+
+            <!-- <div class="comment ml-4">
+              <div class="card mb-2">
+                <div class="card-body">
+                  <h5 class="card-title">Card title</h5>
+                  <h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
+                  <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                  <a href="#" class="card-link">Card link</a>
+                  <a href="#" class="card-link">Another link</a>
+                </div>
+              </div>
+
+              <div class="comment ml-4">
+                <div class="card mb-2">
+                  <div class="card-body">
+                    <h5 class="card-title">Card title</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
+                    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                    <a href="#" class="card-link">Card link</a>
+                    <a href="#" class="card-link">Another link</a>
+                  </div>
+                </div>
+              </div>
+
+            </div> -->
+            <!-- <div class="comment ml-4">
+              <div class="card mb-2">
+                <div class="card-body">
+                  <h5 class="card-title">Card title</h5>
+                  <h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
+                  <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                  <a href="#" class="card-link">Card link</a>
+                  <a href="#" class="card-link">Another link</a>
+                </div>
+              </div>
+            </div> -->
+
+          </div>
+
+        </div>
+    
+       </div> 
  
     </div>
    
 <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script> -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script> -->
+<script>
+  $(document).ready(function(){
+    $(document).on('click','.replay',function(e){
+       $(e.target.parentNode.parentNode).after(`<input type="text" />`)
+    })
+  })
+  
+</script>
 
 
 {% endblock %}
