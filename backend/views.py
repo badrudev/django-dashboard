@@ -118,7 +118,7 @@ def permission(request,*args,**kwargs):
    
       # return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
    else:
-      return render(request,"admin/permission/index.html")
+      return render(request,"admin/administration/index.html")
 
 @permission_required()
 def deletePermission(request,*args,**kwargs):
@@ -328,7 +328,7 @@ def module(request,*args,**kwargs):
       context = {
          'parentId':parentId
       }
-      return render(request,"admin/module/index.html",context)
+      return render(request,"admin/administration/module.html",context)
 
 @permission_required()
 def deleteModule(request,*args,**kwargs):
@@ -340,7 +340,6 @@ def deleteModule(request,*args,**kwargs):
         Module.objects.filter(id=moduleId).delete()
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
       
-
 @xhr_request_only()
 def addEditModule(request,*args,**kwargs):
     parentId = kwargs.get('parentId', '')
@@ -434,7 +433,6 @@ def user(request,*args,**kwargs):
       # return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
    else:
       return render(request,"admin/administration/user.html")
-
 
 @permission_required() 
 def addEditUser(request,*args,**kwargs):
@@ -679,9 +677,6 @@ def menuEdit(request,*args,**kwargs):
             "access":"You don't have add permission!"
          }, status=200) 
 
-
-
-
 @permission_required()
 def menuDelete(request,*args,**kwargs):
    if 'Delete' in kwargs.get('permission'):
@@ -690,8 +685,6 @@ def menuDelete(request,*args,**kwargs):
    
    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
        
-
-
 @xhr_request_only()
 def sidebarList(request,*args,**kwargs):
    moduleIds = kwargs.get('moduleIds')
@@ -704,6 +697,14 @@ def sidebarList(request,*args,**kwargs):
     
 def redirect(request):
     return render(request,"index.html")
+
+
+def chat(request, *args, **kwargs):
+   #  if not request.user.is_authenticated:
+   #      return redirect("login-user")
+    context = {}
+    return render(request, "admin/socket/chat.html", context)
+
 
 
 

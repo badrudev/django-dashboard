@@ -34,16 +34,7 @@ urlpatterns = [
         path('administration/user',views.user,name="user"),
         path('administration/user/add/<int:userId>',views.addEditUser),
         path('administration/user/add/',views.addEditUser),
-        # path('administration/module/<int:parentId>',views.module,name="module"),
-        # path('administration/module/add/',views.addEditModule),
-        # path('administration/module/add/<int:parentId>',views.addEditModule),
-        # path('administration/module/<int:moduleId>/delete',views.deleteModule),
 
-
-        # path('administration/group/',views.group,name="group"),
-        # path('administration/group/add/',views.addEditGroup),
-        # path('administration/group/add/<int:parentId>',views.addEditGroup),
-        # path('administration/group/<int:moduleId>/delete',views.deleteGroup),
         
         # Movie Url
         path('movie/post',views.movieList,name="movie-list"),
@@ -57,6 +48,10 @@ urlpatterns = [
         path('movie/menu/add/<int:parentId>',views.menuAdd),
         path('movie/menu/edit/<int:menuId>',views.menuEdit),
         path('movie/menu/<int:menuId>/delete',views.menuDelete),
+
+
+        # socket
+        path('socket/chat',views.chat),
     
         
         path('sidebar/list',views.sidebarList,name="sidebar-list"),

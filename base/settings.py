@@ -12,6 +12,17 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+# from channels.routing import ProtocolTypeRouter
+# from django.core.asgi import get_asgi_application
+
+# django_asgi_app = get_asgi_application()
+
+# os.environ.setdefault("DJANGO_SETTINGS_MODULE", "base.settings")
+# application = ProtocolTypeRouter({
+#     "http": django_asgi_app,
+#     # Just HTTP for now. (We can add other protocols later.)
+# })
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,8 +50,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'frontend',
-    'backend',
+    'backend.apps.BackendConfig',
+    'channels'
 ]
+
+ASGI_APPLICATION = 'backend.asgi.application'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -83,6 +97,11 @@ DATABASES = {
     }
 }
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
