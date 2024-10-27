@@ -89,6 +89,7 @@ button {
 .menu {
   position: relative;
   background: var(--white);
+ 
 }
 
 .menu-bar li:first-child .dropdown {
@@ -245,6 +246,9 @@ button {
     min-height: 100vh;
     width: 100vw;
   }
+  .menu .menu-bar {
+    display: none;
+  }
 
   .menu-bar li:first-child ul:nth-child(1) {
     border-right: none;
@@ -281,6 +285,8 @@ button {
     align-items: stretch;
     row-gap: 1rem;
     padding: 1rem;
+    width: 100vw;
+    overflow: hidden;
   }
 
   .menu-bar .nav-link {
@@ -324,24 +330,15 @@ button {
       <a class="logo" href="/">
         <img src="https://github.com/Evavic44/responsive-navbar-with-dropdown/blob/main/assets/images/logo.png?raw=true" width="35" height="35" alt="Inc Logo" />
       </a>
-      <nav class="menu" >
-        <ul class="menu-bar">
+      <nav class="menu d-flex">
+        <ul class="menu-bar" id="menus-list">
 
         </ul>
       </nav>
     </div>
 
     <div class="nav-end">
-      <!-- <div class="right-container">
-        <form class="search" role="search">
-          <input type="search" name="search" placeholder="Search" />
-          <i class="bx bx-search" aria-hidden="true"></i>
-        </form>
-        <a href="#profile">
-          <img src="https://github.com/Evavic44/responsive-navbar-with-dropdown/blob/main/assets/images/user.jpg?raw=true" width="30" height="30" alt="user image" />
-        </a>
-        <button class="btn btn-primary">Create</button>
-      </div> -->
+
 
       <button id="hamburger" aria-label="hamburger" aria-haspopup="true" aria-expanded="false">
         <i class="bx bx-menu" aria-hidden="true"></i>
@@ -384,7 +381,7 @@ $(document).ready(function(){
     headers: {'X-CSRFToken': csrftoken},
     success: function (response) {
         if(response.Success){
-          $('.menu-bar').html(response.Menus)
+          $('#menus-list').html(response.Menus)
         } 
     },
     error: function (response) {
@@ -395,51 +392,10 @@ $(document).ready(function(){
 })
 
 
-// const dropdownBtn = document.querySelectorAll(".dropdown-btn");
-// const dropdown = document.querySelectorAll(".dropdown");
-// const hamburgerBtn = document.getElementById("hamburger");
-// const navMenu = document.querySelector(".menu");
-// const links = document.querySelectorAll(".dropdown a");
-
-// function setAriaExpandedFalse() {
-//   dropdownBtn.forEach((btn) => btn.setAttribute("aria-expanded", "false"));
-// }
-
-// function closeDropdownMenu() {
-//   dropdown.forEach((drop) => {
-//     drop.classList.remove("active");
-//     drop.addEventListener("click", (e) => e.stopPropagation());
-//   });
-// }
-
-// function toggleHamburger() {
-//   navMenu.classList.toggle("show");
-// }
-
-// dropdownBtn.forEach((btn) => {
-//   btn.addEventListener("click", function (e) {
-//     const dropdownIndex = e.currentTarget.dataset.dropdown;
-//     const dropdownElement = document.getElementById(dropdownIndex);
-
-//     dropdownElement.classList.toggle("active");
-//     dropdown.forEach((drop) => {
-//       console.log(btn.dataset["dropdown"],drop.id)
-//       if (drop.id !== btn.dataset["dropdown"]) {
-//         drop.classList.remove("active");
-//       }
-//     });
-//     e.stopPropagation();
-//     btn.setAttribute(
-//       "aria-expanded",
-//       btn.getAttribute("aria-expanded") === "false" ? "true" : "false"
-//     );
-//   });
-// });
-
 
 const hamburgerBtn = document.getElementById("hamburger");
 const navMenu = document.querySelector(".menu");
-
+const ul = document.querySelector(".menu ul");
 $(document).on('click','.dropdown-btn',function(e){
       
       const dropdownIndex = e.currentTarget.dataset.dropdown;
@@ -460,50 +416,6 @@ $(document).on('click','.dropdown-btn',function(e){
       );
       
       closeChildMenu(dropdownElement)
-      // $(dropdownElement).on('click','.dropdown-btn',function(){
-      //   $(this).click(function(c){
-          
-      //     const dropdownIndex = c.currentTarget.dataset.dropdown;
-      //     const dropdownElement = document.getElementById(dropdownIndex);
-      //     dropdownElement.classList.toggle("active");
-      //     console.log($(this),'c')
-      //     $(this).closest('ul')[0].querySelectorAll(".dropdown").forEach(drop=>{
-      //       if (drop.id !== dropdownIndex) {
-      //         drop.classList.remove("active");
-      //       }
-      //     })
-      //     c.stopPropagation();
-      //     $(this)[0].setAttribute(
-      //       "aria-expanded",
-      //       $(this)[0].getAttribute("aria-expanded") === "false" ? "true" : "false"
-      //     );
-      //   })
-      // })
-
-      
-
-   
-    // $(`#${dropdownIndex} .dropdown-btn`).each(function(ind,btn){
-    //     $(btn).click(function(c){
-          
-    //       const dropdownIndex = c.currentTarget.dataset.dropdown;
-    //       const dropdownElement = document.getElementById(dropdownIndex);
-    //       dropdownElement.classList.toggle("active");
-  
-    //       $(this).closest('ul')[0].querySelectorAll(".dropdown").forEach(drop=>{
-    //         if (drop.id !== dropdownIndex) {
-    //           drop.classList.remove("active");
-    //         }
-    //       })
-    //       c.stopPropagation();
-    //       btn.setAttribute(
-    //         "aria-expanded",
-    //         btn.getAttribute("aria-expanded") === "false" ? "true" : "false"
-    //       );
-    //     })
-      
-    // })
-    
 
 })
 
@@ -566,37 +478,12 @@ function closeDropdownMenu() {
 
 function toggleHamburger() {
   navMenu.classList.toggle("show");
+  ul.classList.toggle('d-flex')
 }
 
 
 
 
-
-// // close dropdown menu when the dropdown links are clicked
-// links.forEach((link) =>
-//   link.addEventListener("click", () => {
-//     closeDropdownMenu();
-//     setAriaExpandedFalse();
-//     toggleHamburger();
-//   })
-// );
-
-// // close dropdown menu when you click on the document body
-// document.documentElement.addEventListener("click", () => {
-//   closeDropdownMenu();
-//   setAriaExpandedFalse();
-// });
-
-// // close dropdown when the escape key is pressed
-// document.addEventListener("keydown", (e) => {
-//   if (e.key === "Escape") {
-//     closeDropdownMenu();
-//     setAriaExpandedFalse();
-//   }
-// });
-
-// // toggle hamburger menu
-// hamburgerBtn.addEventListener("click", toggleHamburger);
 
 
 

@@ -1,9 +1,12 @@
 from django.shortcuts import render,redirect
+from django.contrib import messages
 from django.http import JsonResponse
 from django.http import HttpResponseRedirect
 from frontend.models import *
 from django.db.models import Q
 from django.conf import settings
+from .forms import UserRegistrationForm,UserLoginForm
+from django.contrib.auth import authenticate, login,logout
 from backend.decorators import (
    xhr_request_only
 )
@@ -56,6 +59,55 @@ def home(request):
       
       return render(request,"home.html",context)
 
+
+def login(request):
+    
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+       
+        user = authenticate(request, username = username, password = password)
+        if user is not None:
+            form = login(request, user)
+            messages.success(request, f' welcome {username} !!')
+            # return redirect('home')
+            return redirect('dashboard')
+        else:
+            # messages.info(request, f'account done not exit plz sign in')
+            messages.error(request,'username or password not correct')
+    form = UserLoginForm()
+    return render(request, 'auth/login.html', {'form':form, 'title':'log in'})
+
+def register(request):
+    if request.method == 'POST':
+        form = UserRegistrationForm(request.POST)
+       
+        if form.is_valid():
+            userObj = form.cleaned_data
+            username = userObj['username']
+            email =  userObj['email']
+            password =  userObj['password']
+            if not (Customer.objects.filter(username=username).exists() or Customer.objects.filter(email=email).exists()):
+               #  print(password)
+                Customer.objects.create(
+                  username=username,                  
+                  email=email,                 
+                  password=password,           
+               )
+                user = authenticate(username = username, password = password)
+                login(request, user)
+                return redirect('login')
+                # return HttpResponseRedirect('/')    
+            else:
+                raise forms.ValidationError('Looks like a username with that email or password already exists')
+                
+    else:
+        form = UserRegistrationForm()
+        
+    return render(request, 'auth/register.html', {'form' : form})
+
+
+
 @xhr_request_only()
 def menuList(request, *args, **kwargs):
    menus =  Menu.objects.filter(status="1").all()
@@ -64,7 +116,8 @@ def menuList(request, *args, **kwargs):
       if m.menuId == "":
          MenuHtml += (f'<li><button class="nav-link dropdown-btn" data-dropdown="dropdown{m.id}" aria-haspopup="true" aria-expanded="false" aria-label="discover">{m.name}<i class="bx bx-chevron-down" aria-hidden="true"></i></button>'
                         f'{menuLoop(menus,m.id)}'
-                        f'</li>')         
+                        f'</li>')   
+   MenuHtml += f'<li ><a href="{settings.BASE_URL}login" class="nav-link">Login</a></li><li><a href="{settings.BASE_URL}register"  class="nav-link">Register</a></li>'      
    return JsonResponse({
             "Success": True,
             "Menus":MenuHtml
@@ -100,3 +153,41 @@ def postDetailView(request,Link=None):
       }
       return render(request,"detail.html",context)
 
+
+@xhr_request_only()
+def commentList(request, *args, **kwargs):
+   post = kwargs.get('post', '')
+   parent = request.GET.get('parent', None)
+   startIndex = int(request.GET.get('index', 0))
+   endIndex = int(request.GET.get('length', 3)) + startIndex
+   if parent=='':
+      parent = None
+   lists =  Comment.objects.filter(post_id=post,parent_id=parent)[startIndex:endIndex].all()
+   comments = []
+   for i in lists:
+      context = {
+         'id':i.id,
+         'msg':i.msg,
+         'user':i.user.username,
+         'more':Comment.objects.filter(parent_id=i.id).count(),
+         'user_id':i.user.id,
+         'parent':i.parent_id,
+         'date':i.created_at
+      }
+      comments.append(context)
+   return JsonResponse({
+      "Success": True,
+      "Comments":comments
+   }, status=200)
+
+@xhr_request_only()
+def commentAdd(request, *args, **kwargs):
+   post = kwargs.get('post', '')
+   Comment.objects.create(
+      
+   )
+   
+   return JsonResponse({
+      "Success": True,
+      "Comments":[]
+   }, status=200)
