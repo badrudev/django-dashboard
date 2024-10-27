@@ -1,8 +1,6 @@
 from django.db import models
-
-# Create your models here.
-from django.db import models
-
+from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
 class Posts(models.Model):
     name = models.TextField()
@@ -30,7 +28,7 @@ class Menu(models.Model):
     status = models.CharField(max_length=100)
     
 
-class Customer(models.Model):
+class Customer(AbstractBaseUser):
     username = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=10)
@@ -39,11 +37,13 @@ class Customer(models.Model):
     status = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    def set_password(self, raw_password):
-        self.password = make_password(raw_password)
+    def __str__(self):
+        return self.email
+    # def set_password(self, raw_password):
+    #     self.password = make_password(raw_password)
 
-    def check_password(self, raw_password):
-        return check_password(raw_password, self.password)
+    # def check_password(self, raw_password):
+    #     return check_password(raw_password, self.password)
 
 
 class Comment(models.Model):

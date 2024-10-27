@@ -51,30 +51,42 @@ def home(request):
          }, status=200)
     else:
       trands = Trand.objects.all()[0:4]
+      # if 'customer' in request.session:
+      #    auth = request.session['customer']
+      # else:
+      #    auth = None
       context = {
          "Trands":trands,
+         # "auth":auth
       }
-      
-      
-      
       return render(request,"home.html",context)
 
 
-def login(request):
-    
+def login(request): 
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
        
-        user = authenticate(request, username = username, password = password)
-        if user is not None:
-            form = login(request, user)
-            messages.success(request, f' welcome {username} !!')
-            # return redirect('home')
-            return redirect('dashboard')
-        else:
-            # messages.info(request, f'account done not exit plz sign in')
-            messages.error(request,'username or password not correct')
+        try:
+            customer = Customer.objects.get(username=username)
+            if customer.password==password:
+               auth = {
+                  'id':customer.id,
+                  'username':customer.username,
+                  'password':customer.password,
+                  'email':customer.email,
+                  'phone':customer.phone,
+                  'profile':customer.profile,
+                  'status':customer.status
+               }
+               request.session['customer'] = auth
+               messages.success(request, f'Welcome, {customer.username}!')
+               return redirect('/')  # Adjust redirect as needed
+            else:
+               messages.error(request, 'Incorrect password.')
+        except Customer.DoesNotExist:
+            messages.error(request, 'Customer with this email does not exist.')
+
     form = UserLoginForm()
     return render(request, 'auth/login.html', {'form':form, 'title':'log in'})
 
@@ -88,16 +100,13 @@ def register(request):
             email =  userObj['email']
             password =  userObj['password']
             if not (Customer.objects.filter(username=username).exists() or Customer.objects.filter(email=email).exists()):
-               #  print(password)
-                Customer.objects.create(
+               Customer.objects.create(
                   username=username,                  
                   email=email,                 
                   password=password,           
+                  status=1        
                )
-                user = authenticate(username = username, password = password)
-                login(request, user)
-                return redirect('login')
-                # return HttpResponseRedirect('/')    
+               return redirect('login')    
             else:
                 raise forms.ValidationError('Looks like a username with that email or password already exists')
                 
@@ -106,7 +115,9 @@ def register(request):
         
     return render(request, 'auth/register.html', {'form' : form})
 
-
+def logout(request):
+   request.session.flush()  
+   return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 @xhr_request_only()
 def menuList(request, *args, **kwargs):
@@ -116,8 +127,11 @@ def menuList(request, *args, **kwargs):
       if m.menuId == "":
          MenuHtml += (f'<li><button class="nav-link dropdown-btn" data-dropdown="dropdown{m.id}" aria-haspopup="true" aria-expanded="false" aria-label="discover">{m.name}<i class="bx bx-chevron-down" aria-hidden="true"></i></button>'
                         f'{menuLoop(menus,m.id)}'
-                        f'</li>')   
-   MenuHtml += f'<li ><a href="{settings.BASE_URL}login" class="nav-link">Login</a></li><li><a href="{settings.BASE_URL}register"  class="nav-link">Register</a></li>'      
+                        f'</li>')  
+   if 'customer' in request.session: 
+      MenuHtml += f'<li ><a href="{settings.BASE_URL}logout" class="nav-link">Logout</a></li>'         
+   else:                
+      MenuHtml += f'<li ><a href="{settings.BASE_URL}login" class="nav-link">Login</a></li><li><a href="{settings.BASE_URL}register"  class="nav-link">Register</a></li>'      
    return JsonResponse({
             "Success": True,
             "Menus":MenuHtml
@@ -149,7 +163,7 @@ def postDetailView(request,Link=None):
       data = Posts.objects.filter(name=MovieName,status=1).values().first()
       context = {
          "link":Link,
-         "post":data
+         "post":data,
       }
       return render(request,"detail.html",context)
 
@@ -180,14 +194,34 @@ def commentList(request, *args, **kwargs):
       "Comments":comments
    }, status=200)
 
+
 @xhr_request_only()
 def commentAdd(request, *args, **kwargs):
-   post = kwargs.get('post', '')
-   Comment.objects.create(
+   if request.method == 'POST':
+      post = kwargs.get('post', '')
+      auth = False
+      if 'customer' in request.session:
+         auth = True
+         msg = request.POST
+         customer = request.session['customer']
+         Comment.objects.create(
+            msg=msg['message'],
+            status=1,
+            parent_id=msg['parent'],
+            post_id=post,
+            user_id=customer['id']
+         )
       
-   )
-   
-   return JsonResponse({
-      "Success": True,
-      "Comments":[]
-   }, status=200)
+      return JsonResponse({
+         "Success": True,
+         "Auth":auth,
+         
+      }, status=200)
+
+
+# if customer.check_password(password):
+#     login(request, customer)  # Logs the customer in without authenticate
+#     messages.success(request, f'Welcome, {customer.username}!')
+#     return redirect('/')  # Adjust redirect as needed
+# else:
+#     messages.error(request, 'Incorrect password.')

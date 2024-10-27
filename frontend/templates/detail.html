@@ -13,6 +13,9 @@
     border-top: 1px solid rgba(34, 36, 38, .1);
     box-shadow: none;
   }
+  .replay, .more{
+    cursor: pointer;
+  }
 
 </style>
 
@@ -90,57 +93,7 @@
        </div>
        <div class="row" >
         
-        <div class="col-md-12 col-sm-12 col-lg-8" id="comments">
-          
-          <!-- <div class="comment"> -->
-            <!-- <div class="card mb-2">
-              <div class="card-body p-2">
-                <h6 class="card-title mb-0">Card title</h6>
-                <small class="card-subtitle mb-2 text-muted">5 hours ago</small>
-                <p class="card-text mb-2">Some quick example text to build on the card</p>
-                <button class="card-link replay" >Replay</button>
-                <button  class="card-link">More</button>
-              </div>
-            </div> -->
-
-            <!-- <div class="comment ml-4">
-              <div class="card mb-2">
-                <div class="card-body">
-                  <h5 class="card-title">Card title</h5>
-                  <h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
-                  <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                  <button class="card-link replay" >Replay</button>
-                  <button  class="card-link">More</button>
-                </div>
-              </div>
-
-              <div class="comment ml-4">
-                <div class="card mb-2">
-                  <div class="card-body">
-                    <h5 class="card-title">Card title</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
-                    <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                    <button class="card-link replay" >Replay</button>
-                    <button  class="card-link">More</button>
-                  </div>
-                </div>
-              </div>
-
-            </div> -->
-            <!-- <div class="comment ml-4">
-              <div class="card mb-2">
-                <div class="card-body">
-                  <h5 class="card-title">Card title</h5>
-                  <h6 class="card-subtitle mb-2 text-muted">Card subtitle</h6>
-                  <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                  <a href="#" class="card-link">Card link</a>
-                  <a href="#" class="card-link">Another link</a>
-                </div>
-              </div>
-            </div> -->
-
-          <!-- </div> -->
-        </div>
+        <div class="col-md-12 col-sm-12 col-lg-8" id="comments"></div>
     
        </div> 
  
@@ -153,9 +106,11 @@
     $('#comments').append(`<p>Comments</p>`)
     $(document).on('click','.replay',function(e){
       $('#comments').find('.form-group').remove()
+        let parent = $(e.target).attr('data-comment')
         $(e.target.parentNode.parentNode).after(`
           <form class="form-group comment-form">
             <label class="form-label">Message</label> 
+            <input type="hidden" name="parent" value="${parent}" />
             <textarea class="form-control" name="message" placeholder="Message"></textarea>
             <button class="btn btn-sm btn-success mt-1" type="submit">send</button>
           </form>
@@ -171,7 +126,12 @@
       let moreComment = (more > startIndex) ? (more-startIndex) : 0
       fetchComments(3,parent,index)
       $(e.target).attr('data-index',startIndex)
-      $(e.target).html(`More(${moreComment})`)
+      if(moreComment==0){
+        $(e.target).remove()
+      }else{
+        $(e.target).html(`More(${moreComment})`)
+      }
+      
     })
     fetchComments(3)
 
@@ -192,13 +152,17 @@
                               <h6 class="card-title mb-0">${comment.user}</h6>
                               <small class="card-subtitle mb-2 text-muted">5 hours ago</small>
                               <p class="card-text mb-2">${comment.msg}</p>
-                              <small class="card-link replay" data-parent="${comment.parent}" data-user="${comment.user_id}" >Replay</small>`
-                               if(comment.more){
+                              <small class="card-link replay mr-2" 
+                              data-parent="${comment.parent}" 
+                              data-comment="${comment.id}" 
+                              data-user="${comment.user_id}" >Replay</small>`
+                              if(comment.more){
                                 html +=`<small  class="card-link ml-1 more" 
-                                data-comment="${comment.id}" data-index="${idx}"  
-                                data-more="${comment.more}"
-                                data-length="${length}">More(${comment.more})</small>`
-                               }
+                                  data-comment="${comment.id}" data-index="${idx}"  
+                                  data-more="${comment.more}"
+                                  data-length="${length}">More(${comment.more})
+                                </small>`
+                              }
                               
                     html +=`</div>
                           </div>
@@ -221,8 +185,25 @@
 
  $(document).on('submit','.comment-form',function(e){
    e.preventDefault()
-   console.log($(this).serializeArray())
+   let post = $(this).serializeArray()
+   $.ajax({
+      type: 'POST',
+      data:post,
+      url: "{{ settings.BASE_URL }}/commentAdd/"+'3',
+      headers: {'X-CSRFToken': csrftoken},
+      success: function (response) {
+          if(response.Success){
+            if(!response.Auth){
+                window.location.href = "/login/"
+            }else{
 
+            }
+          }
+      },
+      error: function (response) {
+          alert(response["responseJSON"]["error"]);
+      }
+    })
  })
 
   
