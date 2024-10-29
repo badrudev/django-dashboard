@@ -200,22 +200,28 @@ def commentAdd(request, *args, **kwargs):
    if request.method == 'POST':
       post = kwargs.get('post', '')
       auth = False
+      context = {}
       if 'customer' in request.session:
          auth = True
          msg = request.POST
          customer = request.session['customer']
-         Comment.objects.create(
-            msg=msg['message'],
-            status=1,
-            parent_id=msg['parent'],
-            post_id=post,
-            user_id=customer['id']
-         )
-      
+         comment = Comment.objects.create(
+                     msg=msg['message'],
+                     status=1,
+                     parent_id=msg['parent'] if 'parent' in msg else None,
+                     post_id=post,
+                     user_id=customer['id']
+                  )
+         context['id'] =  comment.id
+         context['msg'] =  comment.msg
+         context['date'] =  comment.created_at 
+         context['user'] =  comment.user.username 
+         context['parent'] =  comment.parent_id
+         # print(msg['parent'] if 'parent' in msg else None)
       return JsonResponse({
          "Success": True,
          "Auth":auth,
-         
+         "Comment":context
       }, status=200)
 
 

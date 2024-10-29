@@ -103,12 +103,18 @@
 <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script> -->
 <script>
   $(document).ready(function(){
-    $('#comments').append(`<p>Comments</p>`)
+    $('#comments').append(`
+    <form class="form-group comment-form">
+      <label class="form-label">Comments</label> 
+      <textarea class="form-control" name="message" placeholder="Message"></textarea>
+      <button class="btn btn-sm btn-success mt-1" type="submit">send</button>
+    </form>
+    `)
     $(document).on('click','.replay',function(e){
-      $('#comments').find('.form-group').remove()
+        $('#comments').find('.replay-form').remove()
         let parent = $(e.target).attr('data-comment')
         $(e.target.parentNode.parentNode).after(`
-          <form class="form-group comment-form">
+          <form class="form-group comment-form replay-form">
             <label class="form-label">Message</label> 
             <input type="hidden" name="parent" value="${parent}" />
             <textarea class="form-control" name="message" placeholder="Message"></textarea>
@@ -124,7 +130,7 @@
       let more = $(e.target).attr('data-more')
       let startIndex = parseInt(index)+parseInt(length)
       let moreComment = (more > startIndex) ? (more-startIndex) : 0
-      fetchComments(3,parent,index)
+      fetchComments(3,index,length,parent)
       $(e.target).attr('data-index',startIndex)
       if(moreComment==0){
         $(e.target).remove()
@@ -137,7 +143,7 @@
 
   })
 
-  function fetchComments(post,parent='',idx=0,length=3){
+ function fetchComments(post,idx=0,length=3,parent=''){
     $.ajax({
       type: 'GET',
       url: "{{ settings.BASE_URL }}/commentList/"+post+"?parent="+parent+"&index="+idx+"&length="+length,
@@ -185,7 +191,13 @@
 
  $(document).on('submit','.comment-form',function(e){
    e.preventDefault()
+   let self = $(this)
    let post = $(this).serializeArray()
+   let parent = post.find(function(item){
+      if(item.name=='parent'){
+        return item
+      }
+   })
    $.ajax({
       type: 'POST',
       data:post,
@@ -194,9 +206,40 @@
       success: function (response) {
           if(response.Success){
             if(!response.Auth){
-                window.location.href = "/login/"
+              window.location.href = "/login/"
             }else{
-
+              
+              let comment = response.Comment
+              let html=`<div class="comment ${(comment.parent) ? 'ml-4' : ''}" id="comment${comment.id}">
+                            <div class="card mb-2">
+                              <div class="card-body p-2">
+                                <h6 class="card-title mb-0">${comment.user}</h6>
+                                <small class="card-subtitle mb-2 text-muted">5 hours ago</small>
+                                <p class="card-text mb-2">${comment.msg}</p>
+                                <small class="card-link replay mr-2" 
+                                data-parent="${comment.parent}" 
+                                data-comment="${comment.id}" 
+                                data-user="${comment.user_id}" >Replay</small>`
+                                if(comment.more){
+                                  html +=`<small  class="card-link ml-1 more" 
+                                    data-comment="${comment.id}" data-index="${idx}"  
+                                    data-more="${comment.more}"
+                                    data-length="${length}">More(${comment.more})
+                                  </small>`
+                                }
+                                
+                    html +=`</div>
+                          </div>
+                        </div>`
+              if(self.hasClass('replay-form')){
+                if(parent){
+                  $('#comment'+parent.value).append(html)
+                }
+                self.remove()
+              }else{
+                $('#comments').append(html)
+              }
+                    
             }
           }
       },
@@ -206,7 +249,6 @@
     })
  })
 
-  
 </script>
 
 
