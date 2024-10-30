@@ -126,8 +126,8 @@
     $(document).on('click','.more',function(e){
       let parent = $(e.target).attr('data-comment')
       let index = $(e.target).attr('data-index')
-      let length = $(e.target).attr('data-length')
       let more = $(e.target).attr('data-more')
+      let length = (more >= 3 ) ? $(e.target).attr('data-length') : more
       let startIndex = parseInt(index)+parseInt(length)
       let moreComment = (more > startIndex) ? (more-startIndex) : 0
       fetchComments(3,index,length,parent)
@@ -153,7 +153,7 @@
             let html = ''
             response.Comments?.forEach(comment => {
               html +=`<div class="comment ${(parent) ? 'ml-4' : ''}" id="comment${comment.id}">
-                          <div class="card mb-2">
+                          <div class="card mb-2" id="card${comment.id}">
                             <div class="card-body p-2">
                               <h6 class="card-title mb-0">${comment.user}</h6>
                               <small class="card-subtitle mb-2 text-muted">5 hours ago</small>
@@ -175,7 +175,7 @@
                         </div>`
             });
             if(parent){
-              $(document).find('#comment'+parent).append(html)
+              $(document).find('#card'+parent).after(html)
             }else{
               $('#comments').append(html)
             }
