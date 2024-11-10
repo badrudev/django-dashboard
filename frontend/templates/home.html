@@ -75,8 +75,8 @@
     </div>
    
 <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script> -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script> -->
 <script>
     
     $(document).ready( function () {
@@ -144,6 +144,19 @@
         
     }
 
+    fetch('https://qxssp3-8080.csb.app/api/view')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log(data);
+    })
+    .catch(error => {
+      console.error('There was a problem with the fetch operation:', error);
+    });
 
 </script>
 
