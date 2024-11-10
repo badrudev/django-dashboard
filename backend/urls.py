@@ -1,7 +1,7 @@
 from django.urls import path
 from django.conf import settings
 # from . import views
-from .controllers import movie_controller, auth_controller, dashboard_controller
+from .controllers import movie_controller, auth_controller, dashboard_controller,chat_controller
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 from .forms import UserLoginForm
@@ -55,6 +55,9 @@ urlpatterns = [
 
         # Sidebar 
         path('sidebar/list',dashboard_controller.sidebarList,name="sidebar-list"),
+
+        # Chat view
+        path('chat/list',chat_controller.ChatView.as_view(greeting="G'day"),name="sidebar-list"),
 
 
 
